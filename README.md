@@ -11,6 +11,35 @@ The version.sh script is used to update the version of a package. It can be call
 - `next-version`: Get the next version.
 - `changelog`: Update the changelog.
 
+## Installation
+
+To install the version.sh script, just copy the script to the root of your package. You can do this by running the following command:
+
+```
+curl -o version.sh https://raw.githubusercontent.com/rodydavis/version.sh/master/version.sh
+```
+
+Then, make the script executable by running the following command:
+
+```
+chmod +x version.sh
+```
+
+Open the version.sh script in a text editor and update the following variables:
+
+- `file`: The name of the file that contains the version number.
+
+The file should have a version number in the following format:
+
+```
+version: 1.0.0+0
+```
+
+**Note:** The version number must be on a single line.
+We recommend using the pubspec.yaml file for this. Also more file support will be added in the future.
+
+That's it! You can now use the version.sh script to update the version number of your package.
+
 ## Usage
 
 To use the version.sh script, open a terminal and navigate to the directory where the script is located. Then, run the script with one of the following arguments:
@@ -21,6 +50,9 @@ The build argument increments the build number of the current version. To use th
 
 ```
 ./version.sh build
+
+# Current version example: 1.0.0+0
+# Output example: 1.0.0+1
 ```
 
 This will update the version number in the pubspec.yaml file and output the new version number.
@@ -31,6 +63,9 @@ The patch argument increments the patch number of the current version. To use th
 
 ```
 ./version.sh patch
+
+# Current version example: 1.0.0+0
+# Output example: 1.0.1+0
 ```
 
 This will update the version number in the pubspec.yaml file and output the new version number.
@@ -41,6 +76,9 @@ The minor argument increments the minor number of the current version and resets
 
 ```
 ./version.sh minor
+
+# Current version example: 1.0.0+0
+# Output example: 1.1.0
 ```
 
 This will update the version number in the pubspec.yaml file and output the new version number.
@@ -51,6 +89,9 @@ The major argument increments the major number of the current version and resets
 
 ```
 ./version.sh major
+
+# Current version example: 1.0.0+0
+# Output example: 2.0.0
 ```
 
 This will update the version number in the pubspec.yaml file and output the new version number.
@@ -61,6 +102,9 @@ The commit argument gets the commit message for version change. To use this argu
 
 ```
 ./version.sh commit
+
+# Current version example: 1.0.0+1
+# Output example: Bump version to 1.0.0 Build 1
 ```
 
 This will output the commit message for the version change.
@@ -71,6 +115,9 @@ The version argument gets the current version. To use this argument, run the fol
 
 ```
 ./version.sh version
+
+# Current version example: 1.0.0+1
+# Output example: 1.0.0+1
 ```
 
 This will output the current version.
@@ -80,7 +127,10 @@ This will output the current version.
 The next-version argument gets the next version. To use this argument, run the following command:
 
 ```
-./version.sh version
+./version.sh next-version
+
+# Current version example: 1.0.0+1
+# Output example: 1.0.0+2
 ```
 
 This will output the next version.
@@ -93,38 +143,21 @@ The changelog argument updates the changelog. To use this argument, run the foll
 ./version.sh changelog
 ```
 
-This will update the changelog and output a success message.
-
-## Examples
-
-Here are some examples of how to use the version.sh script:
-
-### Example 1
-
-To increment the build number of the current version, run the following command:
+Output example:
 
 ```
-./version.sh build
-```
+# 🎁 Release notes (`v1.0.0+182`)
 
-This will output the new version number.
+## Changes
+- Change: bump version to 1.0.0 Build 182
+- Add changelog.md
+- Fix pagination
+- Change: refactor logic
 
-### Example 2
+## Metadata
 
-To get the commit message for version change, run the following command:
-
-```
-./version.sh commit
-```
-
-This will output the commit message for the version change.
-
-### Example 3
-
-To update the changelog, run the following command:
+This version -------- v1.0.0+182
+Previous version ---- v1.0.0+181
+Total commits -------        4
 
 ```
-./version.sh changelog
-```
-
-This will update the changelog and output a success message.
