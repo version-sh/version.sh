@@ -16,7 +16,7 @@ The version.sh script is used to update the version of a package. It can be call
 To install the version.sh script, just copy the script to the root of your package. You can do this by running the following command:
 
 ```
-curl -o version.sh https://raw.githubusercontent.com/rodydavis/version.sh/master/version.sh
+curl -o version.sh https://raw.githubusercontent.com/version-sh/version.sh/main/version.sh
 ```
 
 Then, make the script executable by running the following command:
