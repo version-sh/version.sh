@@ -1,4 +1,4 @@
-# version.sh Script Documentation
+# version.sh
 
 The version.sh script is used to update the version of a package. It can be called with the following arguments:
 
