@@ -1,9 +1,15 @@
 #!/bin/bash
 
 # This script is used to update the version of the package.
-# It can be called with the following arguments:
 
+# Define the version file path
 file="pubspec.yaml"
+
+# Define the list of change types for the commit message grouping when creating
+# the changelog. All the commit messages that start with one of these change
+# types will be grouped under that change type in the changelog.
+# The rest of the commit messages will be grouped under the "Other" section.
+declare -a CHANGE_TYPES=("Add" "Change" "Fix")
 
 # Function to extract version number from version file
 get_version() {
@@ -94,14 +100,125 @@ fi
 
 # Check if the script was called with the "changelog" option
 if [ "$1" == "changelog" ]; then
-  export VERSION=$(git tag --sort=-creatordate | head -1)
-  export PREVIOUS_VERSION=$(git tag --sort=-creatordate | head -2 | awk '{split($0, tags, "\n")} END {print tags[1]}')
-  export CHANGES=$(git log --pretty="- %s" $VERSION...$PREVIOUS_VERSION)
-  changelog="# 🎁 Release notes (\`$VERSION\`)\n\n## Changes\n$CHANGES\n\n## Metadata\n\`\`\`\nThis version -------- $VERSION\nPrevious version ---- $PREVIOUS_VERSION\nTotal commits ------- $(echo "$CHANGES" | wc -l)\n\`\`\`\n"
-  # prepend to CHANGELOG.md
+
+  # Parse command line arguments
+  for arg in "$@"; do
+    case $arg in
+      --name=*)
+        export VERSION_NAME="${arg#*=}"
+        shift
+        ;;
+      --to=*)
+        export VERSION_TO="${arg#*=}"
+        shift
+        ;;
+      --from=*)
+        export VERSION_FROM="${arg#*=}"
+        shift
+        ;;
+      changelog)
+        shift
+        ;;
+      --silent)
+        export SILENT=true
+        shift
+        ;;
+      --force)
+        export FORCE=true
+        shift
+        ;;
+      --help)
+        echo "Usage: ./version.sh changelog [--name=<version_name>] [--to=<version_to>] [--from=<version_from>] [--silent] [--force]"
+        exit 0
+        ;;
+      *)
+        echo "Invalid argument: $arg"
+        echo "Usage: ./version.sh changelog [--name=<version_name>] [--to=<version_to>] [--from=<version_from>] [--silent] [--force]"
+        exit 1
+        ;;
+    esac
+  done
+
+  # Set default values if arguments are not defined
+  if [ -z "$VERSION_NAME" ]; then
+    export VERSION_NAME=$(git tag --sort=-creatordate | head -1)
+  fi
+
+  if [ -z "$VERSION_TO" ]; then
+    export VERSION_TO=$(git tag --sort=-creatordate | head -1)
+  fi
+
+  if [ -z "$VERSION_FROM" ]; then
+    if [ "$VERSION_TO" == "HEAD" ]; then
+      export VERSION_FROM=$(git tag --sort=-creatordate | head -1)
+    else
+      export VERSION_FROM=$(git tag --sort=-creatordate | head -2 | awk '{split($0, tags, "\n")} END {print tags[1]}')
+    fi
+    # export VERSION_FROM=$(git tag --sort=-creatordate | head -2 | awk '{split($0, tags, "\n")} END {print tags[1]}')
+  fi
+
+  # Get the list of changes
+  echo "Getting changes from $VERSION_FROM to $VERSION_TO..."
+  echo ""
+  export CHANGES=$(git log --pretty="- %s" $VERSION_TO...$VERSION_FROM)
+
+  # Get the release date
+  export DATE=$(date +%Y-%m-%d)
+
+  # Define the release notes title
+  export TITLE="# 🎁 Release notes (\`$VERSION_NAME\` - $DATE)"
+
+  # echo "Checking for release notes for version $VERSION_NAME ($DATE)..."
+
+  # Check if release notes already exist
+  if cat CHANGELOG.md | grep "$TITLE" > /dev/null; then
+    if [ "$FORCE" == "true" ]; then
+      echo "Release notes already exist for version $VERSION_NAME ($DATE). Forcing update..."
+    else
+      echo "Release notes already exist for version $VERSION_NAME ($DATE)!"
+      exit 1
+    fi
+  fi
+
+  # Initialize the changelog variable
+  changelog=""
+
+  # Group changes by type
+  for type in "${CHANGE_TYPES[@]}"; do
+    changes=$(echo "$CHANGES" | grep -i -E "^- $type")
+    if [ -n "$changes" ]; then
+      changelog+="### $type\n$changes\n\n"
+    fi
+  done
+
+  # Group remaining changes into "Others"
+  others=$(echo "$CHANGES" | grep -ivE "^- ($(IFS='|'; echo "${CHANGE_TYPES[*]}"))")
+  if [ -n "$others" ]; then
+    changelog+="### Others\n$others\n\n"
+  fi
+
+  # Add metadata
+  changelog="$TITLE\n\n$changelog## Metadata\n\`\`\`\nThis version -------- $VERSION_NAME\nPrevious version ---- $VERSION_FROM\nTotal commits ------- $(echo "$CHANGES" | wc -l)\n\`\`\`\n"
+
+  if [ -z "$SILENT" ] && [ -z "$FORCE" ]; then
+    echo "Release notes for version $VERSION_NAME ($DATE):"
+    echo ""
+    echo -e "$changelog"
+    echo ""
+    echo "Does this look good? (y/n)" && read answer
+
+    if [ "$answer" != "${answer#[Yy]}" ]; then
+      echo "Updating CHANGELOG.md..."
+    else
+      echo "Exiting..."
+      exit 0
+    fi
+  fi
+
+  # Prepend to CHANGELOG.md
   echo -e "$changelog\n$(cat CHANGELOG.md)" > CHANGELOG.md
-  
-  echo "Changelog updated successfully for version $VERSION! 🎉"
+
+  echo "Changelog updated successfully for version $VERSION_NAME! 🎉"
 
   exit 0
 fi
