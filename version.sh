@@ -253,3 +253,5 @@ case $1 in
     echo "Invalid argument. Usage: ./version.sh [build|patch|minor|major]"
     exit 1
 esac
+
+
